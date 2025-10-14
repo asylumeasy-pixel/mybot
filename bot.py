@@ -425,8 +425,8 @@ def finalize_and_thanks(message):
         print("Ошибка отправки админу:", e)
     # Сообщение пользователю
     markup = types.InlineKeyboardMarkup()
-    markup.add(types.InlineKeyboardButton("📢 Вступить в группу", url="https://t.me/your_group_here"))
-    markup.add(types.InlineKeyboardButton("📅 Записаться на консультацию", url="https://t.me/your_consultation_here"))
+    markup.add(types.InlineKeyboardButton("📢 Вступить в группу", url="https://t.me/easy_asylum"))
+    markup.add(types.InlineKeyboardButton("📅 Записаться на консультацию", url="https://calendly.com/asylumeasy/30min"))
     bot.send_message(message.chat.id, "🎉 Спасибо! Ваша анкета успешно отправлена. Наш специалист свяжется с вами в ближайшее время.", reply_markup=markup)
     # очищаем сессию
     user_data.pop(user_id, None)
