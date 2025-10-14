@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
-
+from keep_alive import keep_alive
+import telebot
 import os
 import csv
 import telebot
