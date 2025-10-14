@@ -14,6 +14,7 @@ TOKEN = "8396029873:AAHeu1coggukcGVMwCMx-nmm36VzVo7fuoo"   # <- вставь с�
 ADMIN_ID = 7798853644          # <- твой ADMIN_ID (числом)
 CSV_FILE = "ankety.csv"
 GSHEET_NAME = "AsylumBotData"  # <- имя Google Sheets
+keep_alive() 
 
 # ================== GOOGLE SHEETS SETUP ==================
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
