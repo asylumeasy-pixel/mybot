@@ -320,7 +320,7 @@ def handle_how_entered_usa(message):
 
 def ask_plan_to_usa(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-    markup.add("Через Мексику", "По туристической визе в США", "Через Мексику, но койотами")
+    markup.add("Через Мексику", "По тур. визе в США", "Мексика, кайоты")
     bot.send_message(message.chat.id, "Как вы собираетесь попасть в США?", reply_markup=markup)
     bot.register_next_step_handler(message, handle_plan_to_usa)
 
@@ -412,8 +412,8 @@ def finalize_and_thanks(message):
         print("Ошибка отправки админу:", e)
     markup = types.InlineKeyboardMarkup()
     markup.add(types.InlineKeyboardButton("Вступить в группу", url="https://t.me/asylun_usa"))
-    markup.add(types.InlineKeyboardButton("Записаться", url="https://calendly.com/asylumeasy/30min"))
-    bot.send_message(message.chat.id, "Спасибо! Анкета отправлена. Скоро свяжемся.", reply_markup=markup)
+    markup.add(types.InlineKeyboardButton("Записаться на бесплатную консультацию", url="https://calendly.com/asylumeasy/30min"))
+    bot.send_message(message.chat.id, "Спасибо! Анкета отправлена. Скоро с вами свяжемся, а пока подпишись на нашу группу с новостями.", reply_markup=markup)
     user_data.pop(user_id, None)
 
 # ================== АДМИН ПАНЕЛЬ ==================
