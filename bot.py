@@ -447,13 +447,22 @@ def handle_admin_actions(call):
 
 # ================== УСТАНОВКА WEBHOOK И ЗАПУСК ==================
 def set_webhook():
-    webhook_url = f"https://{os.getenv('RENDER_EXTERNAL_HOSTNAME')}.onrender.com/webhook"
+    hostname = os.getenv('RENDER_EXTERNAL_HOSTNAME', 'mybot-c8cm.onrender.com')
+    webhook_url = f"https://{hostname}/webhook"
+    
     bot.remove_webhook()
-    time.sleep(1)
-    result = bot.set_webhook(url=webhook_url)
-    print(f"Webhook установлен: {webhook_url} | Успешно: {result}")
+    time.sleep(2)
+    
+    try:
+        result = bot.set_webhook(url=webhook_url)
+        print(f"WEBHOOK УСТАНОВЛЕН: {webhook_url} → {result}")
+        return result
+    except Exception as e:
+        print(f"ОШИБКА WEBHOOK: {e}")
+        return False
 
 if __name__ == '__main__':
-    set_webhook()
-    port = int(os.environ.get('PORT', 5000))
+    print("ЗАПУСК БОТА...")
+    set_webhook()  # ← ЭТА СТРОКА ДОЛЖНА БЫТЬ!
+    port = int(os.environ.get('PORT', 10000))
     app.run(host='0.0.0.0', port=port)
