@@ -411,8 +411,8 @@ def finalize_and_thanks(message):
     except Exception as e:
         print("Ошибка отправки админу:", e)
     markup = types.InlineKeyboardMarkup()
-    markup.add(types.InlineKeyboardButton("Вступить в группу", url="https://t.me/your_group_here"))
-    markup.add(types.InlineKeyboardButton("Записаться", url="https://t.me/your_consultation_here"))
+    markup.add(types.InlineKeyboardButton("Вступить в группу", url="https://t.me/asylun_usa"))
+    markup.add(types.InlineKeyboardButton("Записаться", url="https://calendly.com/asylumeasy/30min"))
     bot.send_message(message.chat.id, "Спасибо! Анкета отправлена. Скоро свяжемся.", reply_markup=markup)
     user_data.pop(user_id, None)
 
