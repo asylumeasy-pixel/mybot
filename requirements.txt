@@ -1,2 +1,4 @@
 pyTelegramBotAPI==4.14.0
 Flask==2.3.3
+gspread==5.10.0
+oauth2client==4.1.3
