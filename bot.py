@@ -7,15 +7,17 @@ from flask import Flask, request
 TOKEN = "8396029873:AAHeu1coggukcGVMwCMx-nmm36VzVo7fuoo"
 ADMIN_ID = 7798853644
 CSV_FILE = "ankety.csv"
+RENDER_URL = "https://mybot-c8cm.onrender.com"  # ЖЁСТКО ПРОПИСАНО
+
 bot = telebot.TeleBot(TOKEN)
 user_data = {}
 app = Flask(__name__)
 
-# === ПИНГЕР КАЖДЫЕ 5 МИНУТ (не даёт заснуть) ===
+# === ПИНГЕР КАЖДЫЕ 5 МИНУТ ===
 def keep_awake():
-    url = f"https://{os.getenv('RENDER_EXTERNAL_HOSTNAME', 'mybot-c8cm.onrender.com')}.onrender.com/"
+    url = f"{RENDER_URL}/"
     while True:
-        time.sleep(300)  # каждые 5 минут
+        time.sleep(300)
         try:
             requests.get(url, timeout=10)
             print(f"Пинг: {url}")
@@ -89,6 +91,4 @@ def finalize(m):
     user_data.pop(m.from_user.id, None)
 
 if __name__ == '__main__':
-    # УСТАНОВИ WEBHOOK ВРУЧНУЮ ПОСЛЕ DEPLOY:
-    # https://api.telegram.org/bot8396029873:AAHeu1coggukcGVMwCMx-nmm36VzVo7fuoo/setWebhook?url=https://mybot-c8cm.onrender.com/webhook
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000)))
