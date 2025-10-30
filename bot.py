@@ -84,30 +84,7 @@ def save_data(data_dict):
         writer = csv.DictWriter(f, fieldnames=headers)
         if not file_exists:
             writer.writeheader()
-        writer.writerow({
-            "Способ связи": data_dict.get("contact_method", "-"),
-            "Контакт": data_dict.get("contact_info", "-"),
-            "Имя": data_dict.get("name", "-"),
-            "Причина": data_dict.get("reason", "-"),
-            "Гражданство (основное)": data_dict.get("citizenship", "-"),
-            "ВНЖ/2-е гражданство (есть ли)": data_dict.get("residence", "-"),
-            "2-е гражданство / страна ВНЖ": data_dict.get("second_citizenship", "-"),
-            "Регион (ЕС/США)": data_dict.get("target_country", "-"),
-            "Где именно (ЕС)": data_dict.get("where_exact", "-"),
-            "Шенген": data_dict.get("schengen", "-"),
-            "Известен маршрут в ЕС": data_dict.get("known_route_eu", "-"),
-            "Нужна консультация по маршруту ЕС": data_dict.get("need_route_consultation_eu", "-"),
-            "Уже в США": data_dict.get("already_in_usa", "-"),
-            "План в США": data_dict.get("plan_to_usa", "-"),
-            "Через койотов (метка)": data_dict.get("via_coyotes", "-"),
-            "Известен маршрут в Мексику": data_dict.get("known_route_mexico", "-"),
-            "Нужна консультация по маршруту (Мексика)": data_dict.get("need_route_consultation", "-"),
-            "Туристическая виза (есть ли)": data_dict.get("tourist_visa", "-"),
-            "I-589": data_dict.get("i589", "-"),
-            "Декларация (есть ли)": data_dict.get("declaration", "-"),
-            "Интервью (страх/пытки)": data_dict.get("interview", "-"),
-            "Как попали в США": data_dict.get("how_entered_usa", "-"),
-        })
+        writer.writerow({k: data_dict.get(k, "-") for k in headers})
 
     if sheet:
         try:
@@ -134,7 +111,8 @@ def go_back(message, step):
     elif step == 6: handle_second_citizenship_flag(message)
     elif step == 7: handle_second_citizenship(message)
     elif step == 8: ask_region(message)
-    # Добавь при необходимости
+    elif step == 9: handle_region(message)
+    else: start_command(message)
 
 # ================== СТАРТ ==================
 @bot.message_handler(commands=['start'])
@@ -171,7 +149,7 @@ def start_anketa(call):
     )
     bot.register_next_step_handler(call.message, handle_contact_method)
 
-# ================== ШАГИ С ЭМОДЗИ ==================
+# ================== ШАГИ ==================
 def handle_contact_method(message):
     user_id = message.from_user.id
     if message.text == "Назад":
@@ -276,9 +254,6 @@ def ask_region(message):
     bot.send_message(message.chat.id, "*В какой стране ты хочешь получить убежище?*", parse_mode="Markdown", reply_markup=markup)
     bot.register_next_step_handler(message, handle_region)
 
-# === ОСТАЛЬНЫЕ ШАГИ (с эмодзи и "Назад") ===
-# (все функции ниже — как в предыдущем коде, с *текстом* и кнопкой "Назад")
-
 def handle_region(message):
     user_id = message.from_user.id
     if message.text == "Назад":
@@ -286,6 +261,8 @@ def handle_region(message):
         return
     region = message.text.strip()
     user_data[user_id]["target_country"] = region
+    user_data[user_id]["step"] = 9
+
     if "Евросоюз" in region:
         bot.send_message(message.chat.id, "*В какой стране или городе ЕС?*", parse_mode="Markdown")
         bot.register_next_step_handler(message, handle_where_exact_eu)
@@ -298,7 +275,209 @@ def handle_region(message):
     else:
         ask_region(message)
 
-# ... (все остальные функции — с *Markdown* и "Назад")
+# ================== ВЕТКА США ==================
+def handle_already_in_usa(message):
+    user_id = message.from_user.id
+    if message.text == "Назад":
+        go_back(message, 8)
+        return
+    ans = message.text.strip().lower()
+    user_data[user_id]["already_in_usa"] = message.text.strip()
+    if "да" in ans:
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+        markup.add("Да", "Нет")
+        markup.add("Назад")
+        bot.send_message(message.chat.id, "*Была ли шенгенская виза при въезде?*", parse_mode="Markdown", reply_markup=markup)
+        bot.register_next_step_handler(message, handle_schengen_when_entered)
+    else:
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+        markup.add("Через Мексику", "По тур. визе в США", "Мексика, кайоты")
+        markup.add("Назад")
+        bot.send_message(message.chat.id, "*Как ты собираешься попасть в США?*", parse_mode="Markdown", reply_markup=markup)
+        bot.register_next_step_handler(message, handle_plan_to_usa)
+
+def handle_schengen_when_entered(message):
+    user_id = message.from_user.id
+    if message.text == "Назад":
+        go_back(message, 9)
+        return
+    user_data[user_id]["schengen"] = message.text.strip()
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+    markup.add("Да", "Нет")
+    markup.add("Назад")
+    bot.send_message(message.chat.id, "*Подана ли форма I-589?*", parse_mode="Markdown", reply_markup=markup)
+    bot.register_next_step_handler(message, handle_i589)
+
+def handle_i589(message):
+    user_id = message.from_user.id
+    if message.text == "Назад":
+        go_back(message, 9)
+        return
+    user_data[user_id]["i589"] = message.text.strip()
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+    markup.add("Да", "Нет")
+    markup.add("Назад")
+    bot.send_message(message.chat.id, "*Подана ли декларация?*", parse_mode="Markdown", reply_markup=markup)
+    bot.register_next_step_handler(message, handle_declaration)
+
+def handle_declaration(message):
+    user_id = message.from_user.id
+    if message.text == "Назад":
+        go_back(message, 9)
+        return
+    user_data[user_id]["declaration"] = message.text.strip()
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+    markup.add("Да", "Нет")
+    markup.add("Назад")
+    bot.send_message(message.chat.id, "*Было ли интервью на страх?*", parse_mode="Markdown", reply_markup=markup)
+    bot.register_next_step_handler(message, handle_interview)
+
+def handle_interview(message):
+    user_id = message.from_user.id
+    if message.text == "Назад":
+        go_back(message, 9)
+        return
+    user_data[user_id]["interview"] = message.text.strip()
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+    markup.add("По визе", "Через забор", "На машине", "Через мост", "Пешком", "Другое")
+    markup.add("Назад")
+    bot.send_message(message.chat.id, "*Как ты попал в США?*", parse_mode="Markdown", reply_markup=markup)
+    bot.register_next_step_handler(message, handle_how_entered_usa)
+
+def handle_how_entered_usa(message):
+    user_id = message.from_user.id
+    if message.text == "Назад":
+        go_back(message, 9)
+        return
+    user_data[user_id]["how_entered_usa"] = message.text.strip()
+    finalize_and_thanks(message)
+
+def handle_plan_to_usa(message):
+    user_id = message.from_user.id
+    if message.text == "Назад":
+        go_back(message, 9)
+        return
+    plan = message.text.strip()
+    user_data[user_id]["plan_to_usa"] = plan
+    user_data[user_id]["via_coyotes"] = "Да" if "койот" in plan.lower() else "Нет"
+    if "мекс" in plan.lower() or "койот" in plan.lower():
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+        markup.add("Да", "Нет")
+        markup.add("Назад")
+        bot.send_message(message.chat.id, "*Известен ли маршрут до Мексики?*", parse_mode="Markdown", reply_markup=markup)
+        bot.register_next_step_handler(message, handle_known_route_mexico)
+    else:
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+        markup.add("Да", "Нет")
+        markup.add("Назад")
+        bot.send_message(message.chat.id, "*Есть ли тур. виза в США?*", parse_mode="Markdown", reply_markup=markup)
+        bot.register_next_step_handler(message, handle_tourist_visa)
+
+def handle_known_route_mexico(message):
+    user_id = message.from_user.id
+    if message.text == "Назад":
+        go_back(message, 9)
+        return
+    user_data[user_id]["known_route_mexico"] = message.text.strip()
+    if "да" in message.text.lower():
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+        markup.add("Есть", "Нет")
+        markup.add("Назад")
+        bot.send_message(message.chat.id, "*Есть ли шенгенская виза?*", parse_mode="Markdown", reply_markup=markup)
+        bot.register_next_step_handler(message, handle_schengen_after_mexico_known)
+    else:
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+        markup.add("Да", "Нет")
+        markup.add("Назад")
+        bot.send_message(message.chat.id, "*Нужна ли консультация по маршруту?*", parse_mode="Markdown", reply_markup=markup)
+        bot.register_next_step_handler(message, handle_need_route_consultation)
+
+def handle_schengen_after_mexico_known(message):
+    user_id = message.from_user.id
+    if message.text == "Назад":
+        go_back(message, 9)
+        return
+    user_data[user_id]["schengen"] = message.text.strip()
+    finalize_and_thanks(message)
+
+def handle_need_route_consultation(message):
+    user_id = message.from_user.id
+    if message.text == "Назад":
+        go_back(message, 9)
+        return
+    user_data[user_id]["need_route_consultation"] = message.text.strip()
+    finalize_and_thanks(message)
+
+def handle_tourist_visa(message):
+    user_id = message.from_user.id
+    if message.text == "Назад":
+        go_back(message, 9)
+        return
+    user_data[user_id]["tourist_visa"] = message.text.strip()
+    if "да" in message.text.lower():
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+        markup.add("Есть", "Нет")
+        markup.add("Назад")
+        bot.send_message(message.chat.id, "*Есть ли шенгенская виза?*", parse_mode="Markdown", reply_markup=markup)
+        bot.register_next_step_handler(message, handle_schengen_after_tourist)
+    else:
+        finalize_and_thanks(message)
+
+def handle_schengen_after_tourist(message):
+    user_id = message.from_user.id
+    if message.text == "Назад":
+        go_back(message, 9)
+        return
+    user_data[user_id]["schengen"] = message.text.strip()
+    finalize_and_thanks(message)
+
+# ================== ВЕТКА ЕС ==================
+def handle_where_exact_eu(message):
+    user_id = message.from_user.id
+    user_data[user_id]["where_exact"] = message.text.strip()
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+    markup.add("Есть", "Нет")
+    markup.add("Назад")
+    bot.send_message(message.chat.id, "*Есть ли шенгенская виза?*", parse_mode="Markdown", reply_markup=markup)
+    bot.register_next_step_handler(message, handle_schengen_eu)
+
+def handle_schengen_eu(message):
+    user_id = message.from_user.id
+    if message.text == "Назад":
+        go_back(message, 9)
+        return
+    user_data[user_id]["schengen"] = message.text.strip()
+    if "есть" in message.text.lower():
+        finalize_and_thanks(message)
+    else:
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+        markup.add("Да", "Нет")
+        markup.add("Назад")
+        bot.send_message(message.chat.id, "*Известен ли маршрут в ЕС?*", parse_mode="Markdown", reply_markup=markup)
+        bot.register_next_step_handler(message, handle_known_route_eu)
+
+def handle_known_route_eu(message):
+    user_id = message.from_user.id
+    if message.text == "Назад":
+        go_back(message, 9)
+        return
+    user_data[user_id]["known_route_eu"] = message.text.strip()
+    if "да" in message.text.lower():
+        finalize_and_thanks(message)
+    else:
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+        markup.add("Да", "Нет")
+        markup.add("Назад")
+        bot.send_message(message.chat.id, "*Нужна ли консультация по маршруту?*", parse_mode="Markdown", reply_markup=markup)
+        bot.register_next_step_handler(message, handle_need_route_consultation_eu)
+
+def handle_need_route_consultation_eu(message):
+    user_id = message.from_user.id
+    if message.text == "Назад":
+        go_back(message, 9)
+        return
+    user_data[user_id]["need_route_consultation_eu"] = message.text.strip()
+    finalize_and_thanks(message)
 
 # ================== ФИНАЛ ==================
 def finalize_and_thanks(message):
