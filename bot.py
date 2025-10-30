@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os, csv, threading, time, requests, json
+import os, csv, threading, time, requests
 import telebot
 from telebot import types
 from flask import Flask, request
@@ -21,7 +21,10 @@ def keep_awake():
         except: pass
 threading.Thread(target=keep_awake, daemon=True).start()
 
-@app.route('/') ; def index(): return "OK", 200
+@app.route('/')
+def index():
+    return "OK", 200
+
 @app.route('/webhook', methods=['POST'])
 def webhook():
     update = telebot.types.Update.de_json(request.get_data().decode('utf-8'))
@@ -30,7 +33,7 @@ def webhook():
 
 # === СОХРАНЕНИЕ ===
 def save_data(d):
-    headers = ["Способ связи","Контакт","Имя","Причина","Гражданство","ВНЖ/2-е","2-е гражданство","Регион","Где в ЕС","Шенген","Уже в США","План в США","Через койотов","Маршрут Мексика","Консультация Мексика","Тур. виза","I-589","Декларация","Интервью","Как попали"]
+    headers = ["Способ связи","Контакт","Имя","Причина","Гражданство","ВНЖ/2-е","2-е гражданство","Регион","Где в ЕС","Шенген","Уже в США","План в США"]
     with open(CSV_FILE, "a", newline='', encoding="utf-8") as f:
         w = csv.DictWriter(f, headers)
         if not os.path.isfile(CSV_FILE): w.writeheader()
@@ -148,22 +151,8 @@ def finalize(m):
     markup = types.InlineKeyboardMarkup()
     markup.add(types.InlineKeyboardButton("Группа", url="https://t.me/asylun_usa"))
     markup.add(types.InlineKeyboardButton("Консультация", url="https://calendly.com/asylumeasy/30min"))
-    bot.send_message(m.chat.id, "*Спасибо! Скоро свяжемся.*", reply_markup=markup, parse_mode="Markdown")
+    bot.send_message(m.chat.id, "*Спасибо! Анкета отправлена.*", reply_markup=markup, parse_mode="Markdown")
     user_data.pop(m.from_user.id, None)
-
-# === АДМИНКА ===
-@bot.message_handler(commands=['admin'])
-def admin(m):
-    if m.from_user.id != ADMIN_ID: return
-    markup = types.InlineKeyboardMarkup()
-    markup.add(types.InlineKeyboardButton("CSV", callback_data="csv"))
-    bot.send_message(m.chat.id, "*Админ*", reply_markup=markup, parse_mode="Markdown")
-
-@bot.callback_query_handler(func=lambda c: c.data == "csv")
-def send_csv(c):
-    if c.from_user.id != ADMIN_ID: return
-    if os.path.exists(CSV_FILE):
-        with open(CSV_FILE, "rb") as f: bot.send_document(c.message.chat.id, f)
 
 # === ЗАПУСК ===
 if __name__ == '__main__':
