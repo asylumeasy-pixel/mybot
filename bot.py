@@ -147,7 +147,6 @@ def handle_contact_info(message):
 def ask_name(message):
     bot.send_message(message.chat.id, "Как тебя зовут?")
     bot.register_next_step_handler(message, handle_name)
-
 # ================== ОСТАЛЬНЫЕ ФУНКЦИИ (без изменений) ==================
 # ← Вставь сюда ВСЕ функции от handle_name до finalize_and_thanks
 # (они у тебя уже есть — просто скопируй)
